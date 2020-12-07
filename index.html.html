@@ -1,0 +1,220 @@
+<doctype html>
+
+    <html>
+        <head>
+            <meta charset="utf-8">
+            <title>A_star pathfinding for html5 canvas </title>
+            <style>
+                body {padding: 0; margin: 0; height: 100%; width: 100%}
+                div {font-family: arial; font-size: 16px; font-weight: bold; text-align: center}
+                canvas {background-color: black; border: solid grey 2px; position: relative; margin-left:0px; margin-top: 0px}
+            </style>
+            
+        </head>
+        
+        <body>
+            
+            <div>
+                HTML5 Pathfinding <br>
+                <input type="button" onclick="createWorld()" value="New world">
+            </div>
+            
+            <div>
+                <canvas id="gameCanvas" height=320px width=320px ></canvas>
+            </div>
+            
+            
+            
+            <script>
+                
+                var canvas=document.getElementById('gameCanvas');
+                var ctx=canvas.getContext('2d');
+                
+                var spritesheet=new Image();
+                spritesheet.src='images/spritesheet.png';
+                
+                var tileHeight=32;
+                var tileWidth=32;
+                
+                var world=[[]];
+                
+                var startX=64;
+                var startY=64;
+                
+                var finishX='';
+                var finishY='';
+                
+                var dx=2;
+                var dy=2;
+                
+                var mouseX='';
+                var mouseY='';
+                
+                var posElementCol='';
+                var posElementLig='';
+                
+                var openList=[[]];
+                
+                var chemin=[[]];
+                
+              
+                canvas.addEventListener('click', canvasClick, false);
+                
+                canvas.addEventListener('mousemove', function(event){
+                        mouseX = event.offsetX;
+                        mouseY = event.offsetY;});
+                
+                function canvasClick() { 
+                    for (var i=0; i<chemin.length; i++){
+                        ctx.clearRect(chemin[i][0],chemin[i][1],32,32);
+                        ctx.drawImage(spritesheet,0,0,32,32,chemin[i][0],chemin[i][1],32,32);
+                    }
+                    
+                    openList=[[]];
+                    chemin=[[]];
+                    
+                    finishX = 32*(Math.floor(mouseX/32));
+                    finishY = 32*(Math.floor(mouseY/32));
+                    console.log('cible: '+ [finishX,finishY]);
+                    
+                    posElementCol=finishX/32;
+                    posElementLig=finishY/32;
+                    
+                    if (world[posElementCol][posElementLig]==0){
+                        findPath();
+                    } else if (world[posElementCol][posElementLig]==1){
+                            alert ('je ne peux aller sur un rocher!');
+                        }
+                    
+                    createStart();
+                }
+                
+                function createWorld() {
+                    for (x=0; x<10; x++) {
+                        world[x]=[];
+                            for (y=0; y<10; y++)
+                                if (Math.random()>0.8) {
+                                    world[x][y]=1;}
+                                else {
+                                    world[x][y]=0;}}
+                    
+                    for (x=0; x<10; x++) {
+                        for (y=0; y<world.length; y++){
+                            ctx.drawImage(spritesheet, world[x][y]*32, 0, 32, 32, x*32, y*32, 32, 32);
+                                    }
+                                }
+                   
+                    createStart();
+                    openList=[[]];
+                    chemin=[[]];
+                    
+                    for (x=0; x<world.length; x++) {console.log(world[x])};
+                }
+                 
+                function createStart() {
+                    ctx.clearRect(startX,startY,32,32);
+                    ctx.drawImage(spritesheet,0,0,32,32,startX,startY,32,32);
+                    ctx.drawImage(spritesheet,128,0,32,32,startX,startY,32,32);
+                }
+                
+                function findPath() {
+                    chemin[0]=[startX,startY];
+                    makeOpenList(startX,startY,world);
+                    calculVariableH(openList);
+                    choixCase(openList);
+                    
+                   while ((startX!=finishX) || (startY!=finishY)){
+                       
+                        var n=chemin.length;
+                        makeOpenList(chemin[n-1][0], chemin[n-1][1], world);
+                        calculVariableH(openList);
+                        choixCase(openList);
+                        startX=chemin[n][0];
+                        startY=chemin[n][1];
+                        console.log('start x: '+startX);
+                        console.log('start y: '+startY);
+                    }
+                    
+                    move();
+                       
+                }
+                
+                function move(){
+                    console.log('chemin à tracer: '+chemin);
+                    for (var n=0; n<chemin.length; n++){
+                        console.log(chemin[n]);}
+                    
+                    for (var i=0; i<chemin.length; i++){
+                           ctx.drawImage(spritesheet,128,0,32,32,chemin[i][0],chemin[i][1],32,32);
+                            }
+                    startX=finishX;
+                    startY=finishY;
+                    
+                        }
+                
+                
+                function makeOpenList(startX,startY,world) {
+                    var posElement=0;
+                    
+                    openList = [[startX,startY-32],
+                                [startX+32,startY-32],
+                                [startX+32,startY],
+                                [startX+32,startY+32],
+                                [startX,startY+32],
+                                [startX-32,startY+32],
+                                [startX-32,startY],
+                                [startX-32,startY-32]];
+                    
+                if (startX<32){startX=32}; 
+                if (startX>256){startX=256};
+                    
+                if (world[startX/32][(startY-32)/32]==1) 
+                    {openList.splice(posElement,1)} else {posElement+=1};
+                if (world[(startX+32)/32][(startY-32)/32]==1) 
+                    {openList.splice(posElement,1)} else {posElement+=1} ;
+                if (world[(startX+32)/32][startY/32]==1) 
+                    {openList.splice(posElement,1)} else {posElement+=1};
+                if (world[(startX+32)/32][(startY+32)/32]==1) 
+                    {openList.splice(posElement,1)} else {posElement+=1};
+                if (world[startX/32][(startY+32)/32]==1) 
+                    {openList.splice(posElement,1)} else {posElement+=1};
+                if (world[(startX-32)/32][(startY+32)/32]==1) 
+                    {openList.splice(posElement,1)} else {posElement+=1};
+                if (world[(startX-32)/32][startY/32]==1) 
+                    {openList.splice(posElement,1)} else {posElement+=1};
+                if (world[(startX-32)/32][(startY-32)/32]==1) 
+                    {openList.splice(posElement,1)} else {posElement+=1};
+                    
+                console.log('open list: '+openList);
+                for (var n=0; n<openList.length; n++) {console.log (openList[n])};
+                    
+                }
+                
+                function calculVariableH(openList){
+                    for (n=0; n<openList.length; n++){
+                        openList[n][2]= Math.abs((openList[n][0]-finishX))+Math.abs((openList[n][1]-finishY));
+                        console.log(openList[n]);
+                    }
+                }
+                
+                function choixCase(openList){
+                    var small = openList[0][2];
+                    var caseSelect = openList[0];
+                    
+                    for (var n=1 ; n<openList.length; n++){
+                        if (openList[n][2]<small){
+                            caseSelect=openList[n];
+                            small=openList[n][2];
+                        }
+                    }
+                    caseSelect.splice(2,1); 
+                    console.log('case selectionnee: '+ caseSelect);
+                    chemin.push(caseSelect);
+                    console.log('chemin: '+ chemin);  
+                }
+              
+            </script>
+        
+        </body>
+
+    </html>
