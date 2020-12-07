@@ -1,0 +1,158 @@
+<doctype html>
+
+    <html>
+        <head>
+            <meta charset="utf-8">
+            <title>A_star pathfinding for html5 canvas </title>
+            <style>
+                body {padding: 0; margin: 0; height: 100%; width: 100%}
+                div {font-family: arial; font-size: 16px; font-weight: bold; text-align: center}
+                canvas {background-color: black; border: solid grey 2px; position: relative; margin-left:0px; margin-top: 0px}
+            </style>
+            
+        </head>
+        
+        <body>
+            
+            <div>
+                HTML5 Pathfinding <br>
+            </div>
+            
+            <div>
+                <canvas id="gameCanvas" height=320px width=320px ></canvas>
+            </div>
+            
+            <div>
+                <input type="button" onclick="findPath()" value="2-Find path!">
+            </div>
+            
+            <script>
+                var spriteSheet= new Image();
+                spriteSheet.src='images/spritesheet.png';
+                var perso= new Image();
+                perso.src='images/perso.png';
+                
+                var mapW=10;
+                var mapH=10;
+                var tileW=32;
+                var tileH=32;
+                
+                var world=[0,0,0,0,0,1,1,0,0,0,
+                           1,0,0,0,0,1,0,0,0,0,
+                           0,1,0,0,0,0,1,1,0,0,
+                           0,0,0,0,0,0,0,1,0,1,
+                           0,0,0,0,0,1,1,0,0,1,
+                           1,1,0,0,0,0,0,0,0,1,
+                           0,0,1,1,0,0,0,0,0,0,
+                           0,0,0,0,0,0,0,0,0,0,
+                           0,0,0,0,0,1,0,0,0,0,
+                           0,0,0,0,1,1,1,0,0,0];
+                
+                var persoX=32;
+                var persoY=32;
+                
+                var rightPressed=false;
+                var leftPressed=false;
+                var upPressed=false;
+                var downPressed=false;
+                
+                var collisionRight=false;
+                var collisionLeft=false;
+                var collisionUp=false;
+                var collisionDown=false;
+                
+                var dX=2;
+                var dY=2;
+                
+                
+                canvas=document.getElementById('gameCanvas');
+                ctx=canvas.getContext('2d');
+                
+                var interval=setInterval (createWorld,10);
+                
+                document.addEventListener("keydown", keyDownHandler, false);
+                document.addEventListener("keyup", keyUpHandler, false);
+                
+                function keyDownHandler(e){
+                if (e.key=="Right" || e.key=="ArrowRight") {
+                    rightPressed=true;
+                    }
+                if  (e.key=="Left" || e.key=="ArrowLeft") {
+                    leftPressed=true;
+                    }
+                if (e.key=="Up" || e.key=="ArrowUp") {
+                    upPressed=true;
+                    }
+                if (e.key=="Down" || e.key=="ArrowDown") {
+                    downPressed=true;
+                    }
+                }
+                
+                function keyUpHandler(e){
+                if (e.key=="Right" || e.key=="ArrowRight") {
+                    rightPressed=false;
+                    }
+                if  (e.key=="Left" || e.key=="ArrowLeft") {
+                    leftPressed=false;
+                    }
+                if (e.key=="Up" || e.key=="ArrowUp") {
+                    upPressed=false;
+                    }
+                if (e.key=="Down" || e.key=="ArrowDown") {
+                    downPressed=false;
+                    }
+                }
+                
+                function createMap() {
+                    for (x=0; x<mapW; x++) {
+                        for (y=0; y<mapH; y++) {
+                            if (world[y*10+x]==0) {
+                            ctx.drawImage(spriteSheet,0,0,tileW,tileH,x*tileW,y*tileH,32,32)}
+                            else {
+                            ctx.drawImage(spriteSheet,32,0,tileW,tileH,x*tileW,y*tileW,32,32)}   
+                            }
+                        }
+                }
+                
+                function createPerso() {
+                    ctx.drawImage(spriteSheet,128,0,32,32,persoX,persoY,32,32);
+                }
+                
+                function update() {
+                    if (rightPressed && !collisionRight) {persoX+=dX};
+                    if (leftPressed && !collisionLeft) {persoX-=dX};
+                    if (upPressed && !collisionUp) {persoY-=dY};
+                    if (downPressed && !collisionDown) {persoY+=dY};
+                }
+                
+                function checkCollision() {
+                    var posX=Math.floor((persoX)/tileW);
+                    var posY=Math.floor((persoY)/tileH);
+                    
+                    if (world[posY*10+posX+1]==1 || world[(posY+1)*10+posX+1]==1 || persoX>288) {collisionRight=true} else {collisionRight=false};
+                    if (world[posY*10+posX-1]==1 || persoX<0) {collisionLeft=true} else {collisionLeft=false};
+                    if (world[(posY-1)*10+posX]==1 || persoY<0) {collisionUp=true} else {collisionUp=false};
+                    if (world[(posY+1)*10+posX]==1 || persoY>288) {collisionDown=true} else {collisionDown=false};
+                }
+                
+                function createInfos() {
+                    ctx.strokeStyle='red';
+                    ctx.strokeText('x : '+ persoX,5,300);
+                    ctx.strokeText('y : '+ persoY,5,315);
+                }
+                
+                function createWorld() {
+                    checkCollision();
+                    update();
+                    createMap();
+                    createPerso();
+                    createInfos();
+                    }
+               
+            
+            
+            </script>
+            
+               
+        </body>
+    </html>
